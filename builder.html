@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiveFrame — Daily Show Builder</title>
+<style>
+  :root{
+    --bg:#06120C; --panel:#0A1B12; --panel2:#0D2418;
+    --line:rgba(77,255,166,.16); --mint:#4DFFA6; --mint-deep:#17E884;
+    --gold:#F0C96B; --text:#F2FFF8; --muted:#9CC2AF; --dim:#5F8371;
+    --mono:ui-monospace,'JetBrains Mono',Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Inter',sans-serif;padding:40px 20px 80px}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font-size:28px;letter-spacing:.01em;display:flex;align-items:center;gap:12px}
+  h1 .s{color:var(--mint)}
+  .lead{color:var(--muted);margin:10px 0 30px;font-size:15px;line-height:1.5}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px}
+  .card h2{font-family:var(--mono);font-size:13px;letter-spacing:.28em;color:var(--mint);margin-bottom:16px;text-transform:uppercase}
+  label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--dim);margin:12px 0 5px;text-transform:uppercase}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14.5px;outline:none}
+  input:focus{border-color:rgba(77,255,166,.45)}
+  .row{display:flex;gap:12px}
+  .row > div{flex:1}
+  .row .narrow{flex:0 0 170px}
+  .out{display:flex;gap:10px;margin-top:16px}
+  .out input{font-family:var(--mono);font-size:12px;color:var(--mint)}
+  button{background:linear-gradient(135deg,var(--mint),var(--mint-deep));color:#06120C;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;letter-spacing:.06em;cursor:pointer;white-space:nowrap}
+  button:active{transform:scale(.97)}
+  .hint{color:var(--dim);font-size:12.5px;margin-top:8px;line-height:1.45}
+  .story-row{display:flex;gap:10px;margin-bottom:8px}
+  .story-row select{flex:0 0 190px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="s">✦</span> LiveFrame — Daily Show Builder</h1>
+  <p class="lead">Type today's topics and stories, hit <b>Copy</b>, and paste the link into your evmux widget (or browser source). No code editing — the overlay reads everything from the link.</p>
+
+  <div class="card">
+    <h2>Setup — where your overlays are hosted</h2>
+    <label>Base URL (from Netlify/Vercel — see EVMUX-SETUP.md)</label>
+    <input id="base" placeholder="https://your-site.netlify.app" value="">
+    <p class="hint">Testing locally? Leave blank and the links will be relative (works if this page sits in the same folder as the overlays).</p>
+  </div>
+
+  <div class="card">
+    <h2>Broadcast scene — today's topic</h2>
+    <div class="row">
+      <div><label>Episode title / topic of the day</label><input id="b_title" placeholder="The Attention Economy: Who Actually Gets Paid?"></div>
+    </div>
+    <div class="row">
+      <div><label>Kicker (small line above title)</label><input id="b_kicker" placeholder="MARKETS · BUSINESS · ENTERTAINMENT"></div>
+    </div>
+    <div class="out"><input id="b_out" readonly><button onclick="copy('b_out')">Copy</button></div>
+  </div>
+
+  <div class="card">
+    <h2>News / screenshare scene — today's stories</h2>
+    <div class="row">
+      <div><label>Segment title</label><input id="n_title" placeholder="Headlines and Market News, Live"></div>
+      <div><label>On-screen source credit</label><input id="n_source" placeholder="x.com / @EleanorTerrett"></div>
+    </div>
+    <label>Top stories (tag + headline)</label>
+    <div id="stories"></div>
+    <div class="out"><input id="n_out" readonly><button onclick="copy('n_out')">Copy</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Gaming scene</h2>
+    <div class="row">
+      <div><label>Game name (optional — blank shows no game name)</label><input id="g_game" placeholder=""></div>
+      <div class="narrow"><label>Mode tag</label><input id="g_cat" placeholder="RANKED"></div>
+    </div>
+    <div class="out"><input id="g_out" readonly><button onclick="copy('g_out')">Copy</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Lower third</h2>
+    <div class="row">
+      <div><label>Name</label><input id="l_name" placeholder="Jane Doe"></div>
+      <div><label>Role line</label><input id="l_role" placeholder="CEO · Acme Capital"></div>
+      <div class="narrow"><label>Auto-hide (sec, blank = stay)</label><input id="l_hide" placeholder="8"></div>
+    </div>
+    <div class="out"><input id="l_out" readonly><button onclick="copy('l_out')">Copy</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Starting soon</h2>
+    <div class="row"><div class="narrow"><label>Countdown minutes</label><input id="s_min" placeholder="5"></div><div></div></div>
+    <div class="out"><input id="s_out" readonly><button onclick="copy('s_out')">Copy</button></div>
+  </div>
+</div>
+
+<script>
+const TAGS = ['MARKETS','BUSINESS','ENTERTAINMENT','FINANCE','CRYPTO','TECH','BREAKING','POLITICS'];
+const storiesEl = document.getElementById('stories');
+for (let i=0;i<4;i++){
+  const row = document.createElement('div');
+  row.className = 'story-row';
+  row.innerHTML = `<select id="st_tag_${i}">${TAGS.map(t=>`<option>${t}</option>`).join('')}</select>
+                   <input id="st_txt_${i}" placeholder="Story ${i+1} headline (leave blank to skip)">`;
+  storiesEl.appendChild(row);
+  row.querySelector('select').selectedIndex = i % TAGS.length;
+}
+
+function base(){
+  let b = document.getElementById('base').value.trim();
+  if (b && !/^https?:\/\//.test(b)) b = 'https://' + b;
+  if (b && !b.endsWith('/')) b += '/';
+  return b;
+}
+const v = id => document.getElementById(id).value.trim();
+const enc = encodeURIComponent;
+
+function build(){
+  // broadcast
+  let p = [];
+  if (v('b_title'))  p.push('title='+enc(v('b_title')));
+  if (v('b_kicker')) p.push('kicker='+enc(v('b_kicker')));
+  document.getElementById('b_out').value = base()+'overlay-broadcast.html'+(p.length?'?'+p.join('&'):'');
+  // news
+  p = [];
+  if (v('n_title'))  p.push('title='+enc(v('n_title')));
+  if (v('n_source')) p.push('source='+enc(v('n_source')));
+  let sn = 0;
+  for (let i=0;i<4;i++){
+    const txt = v('st_txt_'+i);
+    if (!txt) continue;
+    sn++;
+    p.push('s'+sn+'='+enc(document.getElementById('st_tag_'+i).value+'|'+txt));
+  }
+  document.getElementById('n_out').value = base()+'overlay-screenshare.html'+(p.length?'?'+p.join('&'):'');
+  // gaming
+  p = [];
+  if (v('g_game')) p.push('game='+enc(v('g_game')));
+  if (v('g_game') && v('g_cat')) p.push('cat='+enc(v('g_cat')));
+  document.getElementById('g_out').value = base()+'overlay-gaming.html'+(p.length?'?'+p.join('&'):'');
+  // lower third
+  p = [];
+  if (v('l_name')) p.push('name='+enc(v('l_name')));
+  if (v('l_role')) p.push('role='+enc(v('l_role')));
+  if (v('l_hide')) p.push('hide='+enc(v('l_hide')));
+  document.getElementById('l_out').value = base()+'lower-third.html'+(p.length?'?'+p.join('&'):'');
+  // starting soon
+  p = [];
+  if (v('s_min')) p.push('min='+enc(v('s_min')));
+  document.getElementById('s_out').value = base()+'starting-soon.html'+(p.length?'?'+p.join('&'):'');
+}
+document.addEventListener('input', build);
+function copy(id){
+  const el = document.getElementById(id);
+  el.select();
+  navigator.clipboard ? navigator.clipboard.writeText(el.value) : document.execCommand('copy');
+}
+// remember base URL between visits (best-effort)
+try{
+  const saved = localStorage.getItem('lf_base');
+  if (saved) document.getElementById('base').value = saved;
+  document.getElementById('base').addEventListener('input', e => localStorage.setItem('lf_base', e.target.value));
+}catch(e){}
+build();
+</script>
+</body>
+</html>
