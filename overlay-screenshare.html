@@ -450,6 +450,35 @@ if (new URLSearchParams(location.search).get('video')){
   `;
   document.head.appendChild(s);
 }
+
+function lfApplyRemote(d){
+  if (!d) return;
+  if (d.newsTitle) document.getElementById('title').textContent = d.newsTitle;
+  if (d.source){
+    const el = document.getElementById('srcTag');
+    if (el) el.innerHTML = '<span class="s">\u2726</span><span>source \u2014 <b>' + d.source + '</b></span>';
+  }
+  if (Array.isArray(d.stories) && d.stories.length){
+    document.getElementById('storyList').innerHTML = d.stories.map((s,i) =>
+      '<div class="story"><div class="num">' + String(i+1).padStart(2,'0') + '</div>' +
+      '<div class="body"><div class="tag">' + (s.tag||'STORY') + '</div><div class="txt">' + (s.txt||'') + '</div></div></div>'
+    ).join('');
+  }
+}
+
+/* ============ LIVE TEXT SYNC — fed by builder.html's Update button ============ */
+const LFSYNC = {
+  url: 'https://rlceganwyarqvlzrzlzf.supabase.co/rest/v1/rpc/lf_get_config',
+  key: 'sb_publishable_ASJ_DGS12Pri6zOyoAUEnw_Ww9keFBK',
+  refreshSec: 10,
+};
+async function lfPoll(){
+  try{
+    const r = await fetch(LFSYNC.url, {method:'POST', headers:{'apikey':LFSYNC.key,'Authorization':'Bearer '+LFSYNC.key,'Content-Type':'application/json'}, body:'{}'});
+    if (r.ok) lfApplyRemote(await r.json());
+  }catch(e){}
+}
+lfPoll(); setInterval(lfPoll, LFSYNC.refreshSec*1000);
 </script>
 </div><script>
 (function(){

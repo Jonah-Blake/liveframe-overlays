@@ -8,11 +8,11 @@
   :root{
     --bg:#06120C; --panel:#0A1B12; --panel2:#0D2418;
     --line:rgba(77,255,166,.16); --mint:#4DFFA6; --mint-deep:#17E884;
-    --gold:#F0C96B; --text:#F2FFF8; --muted:#9CC2AF; --dim:#5F8371;
+    --gold:#F0C96B; --red:#FF7A70; --text:#F2FFF8; --muted:#9CC2AF; --dim:#5F8371;
     --mono:ui-monospace,'JetBrains Mono',Menlo,monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Inter',sans-serif;padding:40px 20px 80px}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Inter',sans-serif;padding:40px 20px 120px}
   .wrap{max-width:860px;margin:0 auto}
   h1{font-size:28px;letter-spacing:.01em;display:flex;align-items:center;gap:12px}
   h1 .s{color:var(--mint)}
@@ -20,148 +20,188 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px}
   .card h2{font-family:var(--mono);font-size:13px;letter-spacing:.28em;color:var(--mint);margin-bottom:16px;text-transform:uppercase}
   label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--dim);margin:12px 0 5px;text-transform:uppercase}
-  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14.5px;outline:none}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:11px 12px;font-size:14.5px;outline:none}
   input:focus{border-color:rgba(77,255,166,.45)}
   .row{display:flex;gap:12px}
   .row > div{flex:1}
-  .row .narrow{flex:0 0 170px}
-  .out{display:flex;gap:10px;margin-top:16px}
-  .out input{font-family:var(--mono);font-size:12px;color:var(--mint)}
-  button{background:linear-gradient(135deg,var(--mint),var(--mint-deep));color:#06120C;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;letter-spacing:.06em;cursor:pointer;white-space:nowrap}
-  button:active{transform:scale(.97)}
+  .row .narrow{flex:0 0 180px}
   .hint{color:var(--dim);font-size:12.5px;margin-top:8px;line-height:1.45}
   .story-row{display:flex;gap:10px;margin-bottom:8px}
   .story-row select{flex:0 0 190px}
+
+  .submitbar{
+    position:fixed;left:0;right:0;bottom:0;
+    background:rgba(6,18,12,.96);border-top:1px solid var(--line);
+    backdrop-filter:blur(14px);padding:14px 20px;
+  }
+  .submitbar .inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:16px}
+  button.primary{
+    background:linear-gradient(135deg,var(--mint),var(--mint-deep));color:#06120C;
+    border:none;border-radius:10px;padding:14px 28px;font-weight:800;font-size:15px;
+    letter-spacing:.05em;cursor:pointer;white-space:nowrap;
+  }
+  button.primary:active{transform:scale(.98)}
+  button.primary:disabled{opacity:.5;cursor:wait}
+  #status{font-size:14px;font-weight:600}
+  #status.ok{color:var(--mint)}
+  #status.err{color:var(--red)}
+  #status.dim{color:var(--dim);font-weight:400}
+  .keywrap{flex:0 0 260px}
+  .keywrap input{font-family:var(--mono);font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1><span class="s">✦</span> LiveFrame — Daily Show Builder</h1>
-  <p class="lead">Type today's topics and stories, hit <b>Copy</b>, and paste the link into your evmux widget (or browser source). No code editing — the overlay reads everything from the link.</p>
+  <p class="lead">Fill in today's words and hit <b>Update All Overlays</b>. Every scene in evmux picks up the changes automatically within about 10 seconds — nothing to copy, nothing to paste.</p>
 
   <div class="card">
-    <h2>Setup — where your overlays are hosted</h2>
-    <label>Base URL (from Netlify/Vercel — see EVMUX-SETUP.md)</label>
-    <input id="base" placeholder="https://your-site.netlify.app" value="">
-    <p class="hint">Testing locally? Leave blank and the links will be relative (works if this page sits in the same folder as the overlays).</p>
+    <h2>Broadcast scene (your solo cam)</h2>
+    <label>Episode title / topic of the day</label>
+    <input id="f_title" placeholder="LiveFrame">
+    <label>Kicker (small line above the title)</label>
+    <input id="f_kicker" placeholder="MARKETS · BUSINESS · ENTERTAINMENT">
   </div>
 
   <div class="card">
-    <h2>Broadcast scene — today's topic</h2>
+    <h2>News / screenshare scene</h2>
     <div class="row">
-      <div><label>Episode title / topic of the day</label><input id="b_title" placeholder="The Attention Economy: Who Actually Gets Paid?"></div>
+      <div><label>Segment title</label><input id="f_newsTitle" placeholder="Headlines and Market News, Live"></div>
+      <div><label>On-screen source credit</label><input id="f_source" placeholder="x.com / @EleanorTerrett"></div>
     </div>
-    <div class="row">
-      <div><label>Kicker (small line above title)</label><input id="b_kicker" placeholder="MARKETS · BUSINESS · ENTERTAINMENT"></div>
-    </div>
-    <div class="out"><input id="b_out" readonly><button onclick="copy('b_out')">Copy</button></div>
-  </div>
-
-  <div class="card">
-    <h2>News / screenshare scene — today's stories</h2>
-    <div class="row">
-      <div><label>Segment title</label><input id="n_title" placeholder="Headlines and Market News, Live"></div>
-      <div><label>On-screen source credit</label><input id="n_source" placeholder="x.com / @EleanorTerrett"></div>
-    </div>
-    <label>Top stories (tag + headline)</label>
+    <label>Top stories (shown under your cam — blank rows are skipped)</label>
     <div id="stories"></div>
-    <div class="out"><input id="n_out" readonly><button onclick="copy('n_out')">Copy</button></div>
   </div>
 
   <div class="card">
     <h2>Gaming scene</h2>
     <div class="row">
-      <div><label>Game name (optional — blank shows no game name)</label><input id="g_game" placeholder=""></div>
-      <div class="narrow"><label>Mode tag</label><input id="g_cat" placeholder="RANKED"></div>
+      <div><label>Game name (leave blank for no game name)</label><input id="f_game" placeholder=""></div>
+      <div class="narrow"><label>Mode tag</label><input id="f_cat" placeholder="RANKED"></div>
     </div>
-    <div class="out"><input id="g_out" readonly><button onclick="copy('g_out')">Copy</button></div>
   </div>
 
   <div class="card">
-    <h2>Lower third</h2>
+    <h2>One-off links (these two are per-use, not live-synced)</h2>
     <div class="row">
-      <div><label>Name</label><input id="l_name" placeholder="Jane Doe"></div>
-      <div><label>Role line</label><input id="l_role" placeholder="CEO · Acme Capital"></div>
-      <div class="narrow"><label>Auto-hide (sec, blank = stay)</label><input id="l_hide" placeholder="8"></div>
+      <div><label>Lower third — name</label><input id="l_name" placeholder="Jane Doe"></div>
+      <div><label>Lower third — role</label><input id="l_role" placeholder="CEO · Acme Capital"></div>
+      <div class="narrow"><label>Countdown minutes</label><input id="s_min" placeholder="5"></div>
     </div>
-    <div class="out"><input id="l_out" readonly><button onclick="copy('l_out')">Copy</button></div>
+    <label>Lower third link</label>
+    <input id="l_out" readonly onclick="this.select()">
+    <label>Starting soon link</label>
+    <input id="s_out" readonly onclick="this.select()">
+    <p class="hint">Click a link to select it, copy, and paste into that scene's Web Source when needed.</p>
   </div>
+</div>
 
-  <div class="card">
-    <h2>Starting soon</h2>
-    <div class="row"><div class="narrow"><label>Countdown minutes</label><input id="s_min" placeholder="5"></div><div></div></div>
-    <div class="out"><input id="s_out" readonly><button onclick="copy('s_out')">Copy</button></div>
+<div class="submitbar">
+  <div class="inner">
+    <div class="keywrap"><input id="f_key" type="password" placeholder="Edit key (LF-...)"></div>
+    <button class="primary" id="go" onclick="submitAll()">UPDATE ALL OVERLAYS →</button>
+    <div id="status" class="dim">Enter your edit key once — it's remembered on this device.</div>
   </div>
 </div>
 
 <script>
+const SB = {
+  base: 'https://rlceganwyarqvlzrzlzf.supabase.co/rest/v1/rpc/',
+  key:  'sb_publishable_ASJ_DGS12Pri6zOyoAUEnw_Ww9keFBK',
+};
 const TAGS = ['MARKETS','BUSINESS','ENTERTAINMENT','FINANCE','CRYPTO','TECH','BREAKING','POLITICS'];
 const storiesEl = document.getElementById('stories');
 for (let i=0;i<4;i++){
   const row = document.createElement('div');
   row.className = 'story-row';
   row.innerHTML = `<select id="st_tag_${i}">${TAGS.map(t=>`<option>${t}</option>`).join('')}</select>
-                   <input id="st_txt_${i}" placeholder="Story ${i+1} headline (leave blank to skip)">`;
+                   <input id="st_txt_${i}" placeholder="Story ${i+1} headline">`;
   storiesEl.appendChild(row);
   row.querySelector('select').selectedIndex = i % TAGS.length;
 }
-
-function base(){
-  let b = document.getElementById('base').value.trim();
-  if (b && !/^https?:\/\//.test(b)) b = 'https://' + b;
-  if (b && !b.endsWith('/')) b += '/';
-  return b;
-}
 const v = id => document.getElementById(id).value.trim();
-const enc = encodeURIComponent;
+const setv = (id, val) => { if (val !== undefined && val !== null) document.getElementById(id).value = val; };
+const status = (msg, cls) => { const el = document.getElementById('status'); el.textContent = msg; el.className = cls; };
 
-function build(){
-  // broadcast
-  let p = [];
-  if (v('b_title'))  p.push('title='+enc(v('b_title')));
-  if (v('b_kicker')) p.push('kicker='+enc(v('b_kicker')));
-  document.getElementById('b_out').value = base()+'overlay-broadcast.html'+(p.length?'?'+p.join('&'):'');
-  // news
-  p = [];
-  if (v('n_title'))  p.push('title='+enc(v('n_title')));
-  if (v('n_source')) p.push('source='+enc(v('n_source')));
-  let sn = 0;
+async function rpc(name, body){
+  const r = await fetch(SB.base + name, {
+    method:'POST',
+    headers:{ 'apikey': SB.key, 'Authorization': 'Bearer ' + SB.key, 'Content-Type':'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+function collect(){
+  const stories = [];
   for (let i=0;i<4;i++){
     const txt = v('st_txt_'+i);
-    if (!txt) continue;
-    sn++;
-    p.push('s'+sn+'='+enc(document.getElementById('st_tag_'+i).value+'|'+txt));
+    if (txt) stories.push({ tag: document.getElementById('st_tag_'+i).value, txt });
   }
-  document.getElementById('n_out').value = base()+'overlay-screenshare.html'+(p.length?'?'+p.join('&'):'');
-  // gaming
-  p = [];
-  if (v('g_game')) p.push('game='+enc(v('g_game')));
-  if (v('g_game') && v('g_cat')) p.push('cat='+enc(v('g_cat')));
-  document.getElementById('g_out').value = base()+'overlay-gaming.html'+(p.length?'?'+p.join('&'):'');
-  // lower third
-  p = [];
+  return {
+    title:     v('f_title'),
+    kicker:    v('f_kicker'),
+    newsTitle: v('f_newsTitle'),
+    source:    v('f_source'),
+    stories,
+    game:      v('f_game'),
+    cat:       v('f_cat'),
+  };
+}
+
+async function submitAll(){
+  const key = v('f_key');
+  if (!key){ status('Enter your edit key first (bottom left).', 'err'); return; }
+  const btn = document.getElementById('go');
+  btn.disabled = true; status('Sending…', 'dim');
+  try{
+    const ok = await rpc('lf_update_config', { p_secret: key, p_data: collect() });
+    if (ok === true){
+      try{ localStorage.setItem('lf_key', key); }catch(e){}
+      status('✓ Live — every overlay updates within ~10 seconds.', 'ok');
+    } else {
+      status('✗ Wrong edit key.', 'err');
+    }
+  } catch(e){
+    status('✗ Network error — try again.', 'err');
+  }
+  btn.disabled = false;
+}
+
+/* prefill from what's currently live */
+(async () => {
+  try{
+    const d = await rpc('lf_get_config');
+    if (d){
+      setv('f_title', d.title); setv('f_kicker', d.kicker);
+      setv('f_newsTitle', d.newsTitle); setv('f_source', d.source);
+      setv('f_game', d.game); setv('f_cat', d.cat);
+      if (Array.isArray(d.stories)) d.stories.slice(0,4).forEach((s,i) => {
+        document.getElementById('st_txt_'+i).value = s.txt || '';
+        const sel = document.getElementById('st_tag_'+i);
+        const ix = TAGS.indexOf((s.tag||'').toUpperCase());
+        if (ix > -1) sel.selectedIndex = ix;
+      });
+    }
+  }catch(e){}
+})();
+
+/* remembered key */
+try{ const k = localStorage.getItem('lf_key'); if (k) document.getElementById('f_key').value = k; }catch(e){}
+
+/* one-off links */
+function buildLinks(){
+  const base = new URL('.', location.href).href;
+  const enc = encodeURIComponent;
+  let p = [];
   if (v('l_name')) p.push('name='+enc(v('l_name')));
   if (v('l_role')) p.push('role='+enc(v('l_role')));
-  if (v('l_hide')) p.push('hide='+enc(v('l_hide')));
-  document.getElementById('l_out').value = base()+'lower-third.html'+(p.length?'?'+p.join('&'):'');
-  // starting soon
-  p = [];
-  if (v('s_min')) p.push('min='+enc(v('s_min')));
-  document.getElementById('s_out').value = base()+'starting-soon.html'+(p.length?'?'+p.join('&'):'');
+  document.getElementById('l_out').value = base + 'lower-third.html' + (p.length ? '?'+p.join('&') : '');
+  document.getElementById('s_out').value = base + 'starting-soon.html' + (v('s_min') ? '?min='+enc(v('s_min')) : '');
 }
-document.addEventListener('input', build);
-function copy(id){
-  const el = document.getElementById(id);
-  el.select();
-  navigator.clipboard ? navigator.clipboard.writeText(el.value) : document.execCommand('copy');
-}
-// remember base URL between visits (best-effort)
-try{
-  const saved = localStorage.getItem('lf_base');
-  if (saved) document.getElementById('base').value = saved;
-  document.getElementById('base').addEventListener('input', e => localStorage.setItem('lf_base', e.target.value));
-}catch(e){}
-build();
+document.addEventListener('input', buildLinks);
+buildLinks();
 </script>
 </body>
 </html>
