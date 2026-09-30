@@ -53,7 +53,7 @@
 <body>
 <div class="wrap">
   <h1><span class="s">✦</span> LiveFrame — Daily Show Builder</h1>
-  <p class="lead">Fill in today's words and hit <b>Update All Overlays</b>. Every scene in evmux picks up the changes automatically within about 10 seconds — nothing to copy, nothing to paste.</p>
+  <p class="lead">Fill in today's words and hit <b>Update All Overlays</b>. Every scene in evmux picks up the changes automatically within about 10 seconds — nothing to copy, nothing to paste. Sponsors, stream scenes &amp; ticker live in <a href="control.html" style="color:inherit;font-weight:700">Stream Overlay Control →</a></p>
 
   <div class="card">
     <h2>Broadcast scene (your solo cam)</h2>
@@ -156,7 +156,10 @@ async function submitAll(){
   const btn = document.getElementById('go');
   btn.disabled = true; status('Sending…', 'dim');
   try{
-    const ok = await rpc('lf_update_config', { p_secret: key, p_data: collect() });
+    // merge into the live config so other keys (e.g. the stream overlay's "stream" settings) are preserved
+    const cur = await rpc('lf_get_config').catch(() => null);
+    const data = Object.assign({}, (cur && typeof cur === 'object' && !Array.isArray(cur)) ? cur : {}, collect());
+    const ok = await rpc('lf_update_config', { p_secret: key, p_data: data });
     if (ok === true){
       try{ localStorage.setItem('lf_key', key); }catch(e){}
       status('✓ Live — every overlay updates within ~10 seconds.', 'ok');
