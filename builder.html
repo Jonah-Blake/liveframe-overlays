@@ -21,7 +21,12 @@
   .card h2{font-family:var(--mono);font-size:13px;letter-spacing:.28em;color:var(--mint);margin-bottom:16px;text-transform:uppercase}
   label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--dim);margin:12px 0 5px;text-transform:uppercase}
   input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:11px 12px;font-size:14.5px;outline:none}
-  input:focus{border-color:rgba(77,255,166,.45)}
+  input:focus,textarea:focus{border-color:rgba(77,255,166,.45)}
+  textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:11px 12px;font-size:14.5px;outline:none;font-family:inherit;resize:vertical;min-height:64px;line-height:1.45}
+  .card.feature{border-color:rgba(77,255,166,.4)}
+  .scene{border-top:1px solid var(--line);padding-top:14px;margin-top:16px}
+  .scene:first-of-type{border-top:0;padding-top:0;margin-top:0}
+  .scene h3{font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--text);text-transform:uppercase;margin-bottom:2px}
   .row{display:flex;gap:12px}
   .row > div{flex:1}
   .row .narrow{flex:0 0 180px}
@@ -54,6 +59,30 @@
 <div class="wrap">
   <h1><span class="s">✦</span> LiveFrame — Daily Show Builder</h1>
   <p class="lead">Fill in today's words and hit <b>Update All Overlays</b>. Every scene in evmux picks up the changes automatically within about 10 seconds — nothing to copy, nothing to paste. Sponsors, stream scenes &amp; ticker live in <a href="control.html" style="color:inherit;font-weight:700">Stream Overlay Control →</a></p>
+
+  <div class="card feature">
+    <h2>Stream overlay — green title bar</h2>
+    <div class="scene">
+      <h3>Just Chatting</h3>
+      <label>Title</label><input id="so_chatting_title" placeholder="Just Chatting">
+      <label>Description — one line per row (rows rotate every 8 s)</label><textarea id="so_chatting_desc" rows="2"></textarea>
+    </div>
+    <div class="scene">
+      <h3>News</h3>
+      <label>Title</label><input id="so_news_title" placeholder="Market News">
+      <label>Description — one line per row</label><textarea id="so_news_desc" rows="2"></textarea>
+    </div>
+    <div class="scene">
+      <h3>Podcast</h3>
+      <label>Title</label><input id="so_podcast_title" placeholder="The LiveFrame Podcast">
+      <label>Description — one line per row</label><textarea id="so_podcast_desc" rows="2"></textarea>
+      <div class="row">
+        <div><label>Guest name (right window)</label><input id="so_guest_label" placeholder="Guest Name"></div>
+        <div><label>Guest handle / role</label><input id="so_guest_sub" placeholder="@guest"></div>
+      </div>
+    </div>
+    <p class="hint">Sponsors, spotlight lines, QR links, name plates and the ticker are in <a href="control.html" style="color:var(--mint)">Stream Overlay Control →</a></p>
+  </div>
 
   <div class="card">
     <h2>Broadcast scene (your solo cam)</h2>
@@ -119,6 +148,12 @@ for (let i=0;i<4;i++){
   storiesEl.appendChild(row);
   row.querySelector('select').selectedIndex = i % TAGS.length;
 }
+// defaults the stream overlay uses until something is saved (mirrors overlay defaults)
+const SO_DEFAULTS = {
+  chatting: { title: 'Just Chatting', desc: 'Markets, memes & whatever chat wants\nDrop your questions in chat' },
+  news:     { title: 'Market News', desc: 'Breaking headlines & what they mean for your bags\nLive prices below via Hyperliquid' },
+  podcast:  { title: 'The LiveFrame Podcast', desc: "Today's guest: Guest Name\nFounders, traders & builders in crypto", guest: { label: 'Guest Name', sub: '@guest' } },
+};
 const v = id => document.getElementById(id).value.trim();
 const setv = (id, val) => { if (val !== undefined && val !== null) document.getElementById(id).value = val; };
 const status = (msg, cls) => { const el = document.getElementById('status'); el.textContent = msg; el.className = cls; };
@@ -159,6 +194,7 @@ async function submitAll(){
     // merge into the live config so other keys (e.g. the stream overlay's "stream" settings) are preserved
     const cur = await rpc('lf_get_config').catch(() => null);
     const data = Object.assign({}, (cur && typeof cur === 'object' && !Array.isArray(cur)) ? cur : {}, collect());
+    data.stream = mergeStream(data.stream);
     const ok = await rpc('lf_update_config', { p_secret: key, p_data: data });
     if (ok === true){
       try{ localStorage.setItem('lf_key', key); }catch(e){}
@@ -172,11 +208,39 @@ async function submitAll(){
   btn.disabled = false;
 }
 
+/* stream overlay (green title bar): only these fields are changed; sponsors/ticker/etc. are kept */
+function mergeStream(prev){
+  const s = (prev && typeof prev === 'object' && !Array.isArray(prev)) ? JSON.parse(JSON.stringify(prev)) : {};
+  s.scenes = s.scenes || {};
+  ['chatting','news','podcast'].forEach(k => {
+    s.scenes[k] = s.scenes[k] || {};
+    s.scenes[k].title = document.getElementById('so_'+k+'_title').value.trim();
+    s.scenes[k].desc  = document.getElementById('so_'+k+'_desc').value.replace(/\r/g,'').split('\n').map(x => x.trim()).filter(Boolean).join('\n');
+  });
+  const pw = s.scenes.podcast.windows = s.scenes.podcast.windows || {};
+  pw.guest = Object.assign({}, pw.guest || {}, { label: v('so_guest_label'), sub: v('so_guest_sub') });
+  s.ts = Date.now();
+  return s;
+}
+function prefillStream(st){
+  const sc = (st && st.scenes) || {};
+  ['chatting','news','podcast'].forEach(k => {
+    const d = SO_DEFAULTS[k], cur = sc[k] || {};
+    document.getElementById('so_'+k+'_title').value = cur.title != null ? cur.title : d.title;
+    document.getElementById('so_'+k+'_desc').value  = cur.desc  != null ? cur.desc  : d.desc;
+  });
+  const g = (sc.podcast && sc.podcast.windows && sc.podcast.windows.guest) || SO_DEFAULTS.podcast.guest;
+  document.getElementById('so_guest_label').value = g.label != null ? g.label : '';
+  document.getElementById('so_guest_sub').value   = g.sub != null ? g.sub : '';
+}
+prefillStream(null);
+
 /* prefill from what's currently live */
 (async () => {
   try{
     const d = await rpc('lf_get_config');
     if (d){
+      prefillStream(d.stream);
       setv('f_title', d.title); setv('f_kicker', d.kicker);
       setv('f_newsTitle', d.newsTitle); setv('f_source', d.source);
       setv('f_game', d.game); setv('f_cat', d.cat);
