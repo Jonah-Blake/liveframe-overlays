@@ -279,7 +279,7 @@ var LF = (function () {
         name: "News",
         title: "Market News",
         desc: "Breaking headlines & what they mean for your bags\nLive prices below via Hyperliquid",
-        side: "board",
+        side: "spot",
         windows: {
           share: { label: "On Screen", sub: "Today's headlines" },
           host: { label: "Jonah Blake", sub: "Host" },
@@ -452,7 +452,9 @@ var LF = (function () {
     var html = "", rects = "";
     LAYOUTS[key].forEach(function(L){
       var kind = L.kind;
-      if (L.alt && sc.side === L.alt) kind = L.alt;          // news bottom-right: window or Markets board
+      if (L.alt) {                                            // news bottom-right: sponsor spotlight (default), Markets board, or camera window
+        kind = sc.side === "window" ? "hole" : (sc.side === "markets" ? "board" : "spot");
+      }
       var small = !L.big;
       var cls = "win " + (kind === "hole" ? "hole" : "panel") + (small ? " small" : "") + (kind === "board" ? " mkpanel" : "");
       html += '<div class="'+cls+'" data-id="'+L.id+'" style="left:'+L.x+'px;top:'+L.y+'px;width:'+L.w+'px;height:'+L.h+'px">';

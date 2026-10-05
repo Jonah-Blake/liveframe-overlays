@@ -185,7 +185,7 @@ var LF = (function () {
         name: "News",
         title: "Market News",
         desc: "Breaking headlines & what they mean for your bags\nLive prices below via Hyperliquid",
-        side: "board",
+        side: "spot",
         windows: {
           share: { label: "On Screen", sub: "Today's headlines" },
           host: { label: "Jonah Blake", sub: "Host" },
@@ -394,7 +394,7 @@ var LF = (function () {
     var k = editScene, base = "scenes." + k, h = "";
     h += field("Title", base + ".title", { ph:"Stream title" });
     h += field("Description — one line per row, rows rotate every 8s", base + ".desc", { area:true, rows:3 });
-    if (k === "news") h += field("Bottom-right panel", "scenes.news.side", { select:[["board","Markets.xyz live board (sponsor panel)"],["window","Camera window (guest / co-host)"]] });
+    if (k === "news") h += field("Bottom-right panel", "scenes.news.side", { select:[["spot","Sponsor spotlight (rotating sponsors + codes)"],["markets","Markets.xyz live board"],["window","Camera window (guest / co-host)"]] });
     WINDOWS[k].forEach(function(w){
       if (k === "news" && w[0] === "side" && state.scenes.news.side !== "window") return;
       h += '<div class="win"><h3>'+w[1]+'</h3><div class="row2">' +
